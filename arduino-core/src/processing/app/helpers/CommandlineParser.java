@@ -7,6 +7,7 @@ import processing.app.debug.TargetBoard;
 import processing.app.debug.TargetPackage;
 import processing.app.debug.TargetPlatform;
 import processing.app.legacy.PApplet;
+import processing.app.Platform;
 
 import java.io.File;
 import java.util.*;
@@ -16,7 +17,7 @@ import static processing.app.I18n.tr;
 public class CommandlineParser {
 
   private enum ACTION {
-    GUI, NOOP, VERIFY("--verify"), UPLOAD("--upload"), GET_PREF("--get-pref"), INSTALL_BOARD("--install-boards"), INSTALL_LIBRARY("--install-library"), VERSION("--version");
+    GUI, NOOP, VERIFY("--verify"), UPLOAD("--upload"), GET_PREF("--get-pref"), INSTALL_BOARD("--install-boards"), INSTALL_LIBRARY("--install-library"), VERSION("--version"), GET_SER("--getSerialNumber");
 
     final String value;
 
@@ -54,6 +55,7 @@ public class CommandlineParser {
     actions.put("--install-boards", ACTION.INSTALL_BOARD);
     actions.put("--install-library", ACTION.INSTALL_LIBRARY);
     actions.put("--version", ACTION.VERSION);
+    actions.put("--getSerialNumber", ACTION.GET_SER);
   }
 
   public void parseArgumentsPhase1() {
@@ -66,6 +68,22 @@ public class CommandlineParser {
           String mess = I18n.format(tr("Can only pass one of: {0}"), PApplet.join(valid, ", "));
           BaseNoGui.showError(null, mess, 3);
         }
+	if (a == ACTION.GET_SER){
+	  i ++;
+	  if (i >= args.length){
+	    BaseNoGui.showError(null, tr("Port required for --getSerialNumber"), 3);
+	  }
+	  try{
+	    BaseNoGui.initPackages();
+	    //String sn = (String)BaseNoGui.getPlatform().resolveDeviceByVendorIdProductId(args[i], BaseNoGui.packages).get("iserial");
+	    Platform p = BaseNoGui.getPlatform();
+	    Map<String, Object> d = p.resolveDeviceByVendorIdProductId(args[i], BaseNoGui.packages);
+	    System.out.println(d.get("iserial"));
+	  } catch (Exception e){
+	    e.printStackTrace();
+	  }
+	  a = ACTION.NOOP;
+	}
         if (a == ACTION.GET_PREF) {
           i++;
           if (i < args.length) {
